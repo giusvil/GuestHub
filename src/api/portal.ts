@@ -1,15 +1,21 @@
-import { api, ensureCsrfCookie, resetCsrfCookie } from './client';
+import { api, setAuthToken } from './client';
 import type { DashboardData, PortalUser, SearchFilters } from '../types/portal';
 
+type LoginResponse = PortalUser & { token: string };
+
 export async function login(username: string, password: string, remember = false): Promise<PortalUser> {
-  await ensureCsrfCookie();
-  const { data } = await api.post<PortalUser>('/api/portal/login', { username, password, remember });
-  return data;
+  const { data } = await api.post<LoginResponse>('/api/portal/login', { username, password, remember });
+  setAuthToken(data.token, remember);
+  const { token: _token, ...user } = data;
+  return user;
 }
 
 export async function logout(): Promise<void> {
-  await api.post('/api/portal/logout');
-  resetCsrfCookie();
+  try {
+    await api.post('/api/portal/logout');
+  } finally {
+    setAuthToken(null);
+  }
 }
 
 export async function fetchUser(): Promise<PortalUser> {
@@ -27,7 +33,6 @@ export async function submitPrenotazioni(payload: Record<string, unknown>): Prom
   message: string;
   results: string[];
 }> {
-  await ensureCsrfCookie();
   const { data } = await api.post('/api/portal/submit', payload);
   return data;
 }

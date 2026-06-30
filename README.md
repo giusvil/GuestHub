@@ -8,7 +8,7 @@ Il portale **Blade** in Laravel (`/integrations/portal`) resta attivo e invariat
 
 - React 19 + TypeScript + Vite
 - React Router
-- Axios + Laravel Sanctum (cookie SPA)
+- Axios + Laravel Sanctum (Bearer token)
 
 ## Sviluppo locale
 
@@ -49,7 +49,7 @@ Apri http://localhost:5173 — Vite fa proxy di `/api` e `/sanctum` verso Larave
 | GET | `/api/portal/statistics` | sanctum + portal.statistics |
 | GET | `/api/portal/receipts/alloggiati-web` | sanctum + portal.receipts |
 
-Prima di ogni login: `GET /sanctum/csrf-cookie`.
+Il login restituisce un token Sanctum (`Authorization: Bearer …`) salvato in `sessionStorage` / `localStorage` (se "Ricordami").
 
 ## Produzione (Azure Static Web Apps)
 

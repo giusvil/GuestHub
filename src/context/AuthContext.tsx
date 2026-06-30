@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { setAuthToken } from '../api/client';
 import { fetchUser, login as apiLogin, logout as apiLogout } from '../api/portal';
 import type { PortalUser } from '../types/portal';
 
@@ -17,11 +18,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
+    const hasToken =
+      !!localStorage.getItem('guesthub_token') || !!sessionStorage.getItem('guesthub_token');
+    if (!hasToken) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
     try {
       const data = await fetchUser();
       setUser(data);
     } catch {
       setUser(null);
+      setAuthToken(null);
     } finally {
       setLoading(false);
     }
