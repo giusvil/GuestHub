@@ -26,24 +26,24 @@ fi
 
 gh auth status >/dev/null
 
-echo "Recupero deployment token da Azure Static Web App '$SWA_NAME'…"
+echo "Recupero deployment token da Azure Static Web App '${SWA_NAME}'..."
 DEPLOY_TOKEN="$(az staticwebapp secrets list \
   --name "$SWA_NAME" \
   --resource-group "$RESOURCE_GROUP" \
   --query properties.apiKey \
-  -o tsv)"
+  -o tsv | tr -d '\r\n')"
 
 if [[ -z "$DEPLOY_TOKEN" ]]; then
   echo "Errore: token di deploy non trovato." >&2
   exit 1
 fi
 
-echo "Aggiorno secret GitHub '$SECRET_NAME' su $REPO…"
+echo "Aggiorno secret GitHub '${SECRET_NAME}' su ${REPO}..."
 echo "$DEPLOY_TOKEN" | gh secret set "$SECRET_NAME" --repo "$REPO"
 
-echo "Avvio workflow di deploy…"
+echo "Avvio workflow di deploy..."
 gh workflow run "$WORKFLOW_NAME" --repo "$REPO" --ref main
 
 echo ""
 echo "Fatto. Controlla lo stato:"
-echo "  gh run list --repo $REPO --workflow azure-static-web-apps-guesthub.yml"
+echo "  gh run list --repo ${REPO} --workflow azure-static-web-apps-guesthub.yml"
