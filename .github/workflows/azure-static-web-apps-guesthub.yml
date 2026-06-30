@@ -6,6 +6,10 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: guesthub-production
+  cancel-in-progress: true
+
 env:
   VITE_API_URL: https://laravel-datalayer-aea9gdd6ghfrhkhw.italynorth-01.azurewebsites.net
 
@@ -13,6 +17,9 @@ jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     name: Build and Deploy
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v4
 
@@ -23,6 +30,8 @@ jobs:
           cache: npm
 
       - name: Install and build
+        env:
+          VITE_API_URL: ${{ env.VITE_API_URL }}
         run: |
           npm ci
           npm run build

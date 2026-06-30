@@ -63,13 +63,28 @@ Il login restituisce un token Sanctum (`Authorization: Bearer …`) salvato in `
 
 ### Deploy automatico (GitHub Actions)
 
-1. Aggiungi il secret nel repo **GuestHub** su GitHub:
-   - Nome: `AZURE_STATIC_WEB_APPS_API_TOKEN`
-   - Valore: token da Azure Portal → GuestHub → **Manage deployment token**, oppure:
-     ```bash
-     az staticwebapp secrets list --name GuestHub --resource-group appbnb-v3 --query properties.apiKey -o tsv
-     ```
-2. Push su `main` → workflow `.github/workflows/azure-static-web-apps-guesthub.yml`
+Il workflow `.github/workflows/azure-static-web-apps-guesthub.yml` parte su ogni **push su `main`**.
+
+**Stato attuale:** il workflow è attivo ma fallisce finché manca il secret `AZURE_STATIC_WEB_APPS_API_TOKEN` nel repo GitHub (ultimi run: deploy step in errore).
+
+**Configurazione una tantum** (dopo `gh auth login` e `az login`):
+
+```bash
+chmod +x scripts/setup-github-deploy-secret.sh
+./scripts/setup-github-deploy-secret.sh
+```
+
+In alternativa manuale su GitHub → Settings → Secrets → Actions:
+
+- Nome: `AZURE_STATIC_WEB_APPS_API_TOKEN`
+- Valore:
+  ```bash
+  az staticwebapp secrets list --name GuestHub --resource-group appbnb-v3 --query properties.apiKey -o tsv
+  ```
+
+### LaravelDatalayer
+
+Il deploy automatico su App Service è **già attivo** (`scmType: GitHubAction`, workflow `main_laravel-datalayer.yml` su push `main`).
 
 ### Laravel (CORS + Sanctum cross-origin)
 
@@ -78,7 +93,7 @@ Su **laravel-datalayer** (App Service settings):
 ```env
 FRONTEND_URL=https://jolly-bush-0df126303.7.azurestaticapps.net
 CORS_ALLOWED_ORIGINS=https://jolly-bush-0df126303.7.azurestaticapps.net
-SANCTUM_STATEFUL_DOMAINS=jolly-bush-0df126303.7.azurestaticapps.net
+SANCTUM_STATEFUL_DOMAINS=localhost,localhost:5173,127.0.0.1
 SESSION_SECURE_COOKIE=true
 SESSION_SAME_SITE=none
 ```
