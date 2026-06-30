@@ -51,18 +51,39 @@ Apri http://localhost:5173 — Vite fa proxy di `/api` e `/sanctum` verso Larave
 
 Prima di ogni login: `GET /sanctum/csrf-cookie`.
 
-## Produzione (Azure)
+## Produzione (Azure Static Web Apps)
 
-Opzioni senza nuovo App Service Plan:
+| Risorsa | URL |
+|---------|-----|
+| **GuestHub (React)** | https://jolly-bush-0df126303.7.azurestaticapps.net |
+| **Laravel API + Blade** | https://laravel-datalayer-aea9gdd6ghfrhkhw.italynorth-01.azurewebsites.net |
 
-1. **Static Web App / Blob + CDN** per `dist/` del React, `VITE_API_URL=https://laravel-datalayer.azurewebsites.net`
-2. **Stessa Web App Laravel**: servire `dist/` da sottocartella (es. `/app`) — configurazione IIS/nginx
+- Blade (classico): `…/integrations/portal`
+- React: hostname Static Web App sopra
 
-Impostare su Laravel:
+### Deploy automatico (GitHub Actions)
 
-- `FRONTEND_URL` = URL del frontend React
-- `CORS_ALLOWED_ORIGINS` = stesso URL
-- `SANCTUM_STATEFUL_DOMAINS` = dominio frontend (senza schema)
+1. Aggiungi il secret nel repo **GuestHub** su GitHub:
+   - Nome: `AZURE_STATIC_WEB_APPS_API_TOKEN`
+   - Valore: token da Azure Portal → GuestHub → **Manage deployment token**, oppure:
+     ```bash
+     az staticwebapp secrets list --name GuestHub --resource-group appbnb-v3 --query properties.apiKey -o tsv
+     ```
+2. Push su `main` → workflow `.github/workflows/azure-static-web-apps-guesthub.yml`
+
+### Laravel (CORS + Sanctum cross-origin)
+
+Su **laravel-datalayer** (App Service settings):
+
+```env
+FRONTEND_URL=https://jolly-bush-0df126303.7.azurestaticapps.net
+CORS_ALLOWED_ORIGINS=https://jolly-bush-0df126303.7.azurestaticapps.net
+SANCTUM_STATEFUL_DOMAINS=jolly-bush-0df126303.7.azurestaticapps.net
+SESSION_SECURE_COOKIE=true
+SESSION_SAME_SITE=none
+```
+
+`SESSION_DOMAIN` lasciare vuoto (cookie sulla API Laravel).
 
 ## Stato attuale
 
