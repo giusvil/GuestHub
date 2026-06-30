@@ -48,6 +48,7 @@ export type Prenotazione = {
 
 export type HistoryGroup = {
   codice_prenotazione: string;
+  property_id?: number | null;
   property_name: string;
   submitted_at: string | null;
   movement_date: string | null;
@@ -62,7 +63,11 @@ export type HistoryGroup = {
     ospite_nome: string;
     is_main_guest?: boolean;
     main_guest_label?: string | null;
-    channels: Record<string, { status?: string; error_message?: string | null } | undefined>;
+    channels: Record<string, {
+      status?: string;
+      error_message?: string | null;
+      property_id?: number | string;
+    } | undefined>;
   }>;
   summary: {
     has_errors: boolean;

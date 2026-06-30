@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { downloadReceipt, fetchDashboard, hasPermission, submitPrenotazioni } from '../api/portal';
+import { downloadReceiptFile, fetchDashboard, hasPermission, submitPrenotazioni } from '../api/portal';
 import { PortalPermissions, type DashboardData, type SearchFilters } from '../types/portal';
 import { SearchForm } from '../components/SearchForm';
 import { PrenotazioneCard } from '../components/PrenotazioneCard';
@@ -68,13 +68,7 @@ export function HomePage() {
     e.preventDefault();
     if (!receiptPropertyId || !receiptDate) return;
     try {
-      const blob = await downloadReceipt(Number(receiptPropertyId), receiptDate);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ricevuta-aw-${receiptDate}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+      await downloadReceiptFile(Number(receiptPropertyId), receiptDate);
     } catch {
       setFlash({ type: 'error', text: 'Download ricevuta non riuscito.' });
     }

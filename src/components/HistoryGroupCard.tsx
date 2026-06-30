@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { downloadReceiptFile } from '../api/portal';
 import type { HistoryGroup } from '../types/portal';
 
 function formatDateTime(iso: string | null): string {
@@ -19,10 +21,45 @@ function statusPill(status?: string) {
   return <span className="channel-pill badge-muted">{status}</span>;
 }
 
+function resolveReceiptPropertyId(group: HistoryGroup): number | null {
+  if (group.property_id) {
+    return group.property_id;
+  }
+
+  for (const ospite of group.ospiti) {
+    const propertyId = ospite.channels.alloggiati_web?.property_id;
+    if (propertyId) {
+      return Number(propertyId);
+    }
+  }
+
+  return null;
+}
+
 type Props = { group: HistoryGroup };
 
 export function HistoryGroupCard({ group }: Props) {
   const groupClass = group.summary.has_errors ? 'has-errors' : 'all-ok';
+  const receiptPropertyId = resolveReceiptPropertyId(group);
+  const canDownloadReceipt = !!group.receipt_date && receiptPropertyId !== null;
+  const [downloadingReceipt, setDownloadingReceipt] = useState(false);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
+
+  async function handleReceiptDownload() {
+    if (!group.receipt_date || receiptPropertyId === null) {
+      return;
+    }
+
+    setReceiptError(null);
+    setDownloadingReceipt(true);
+    try {
+      await downloadReceiptFile(receiptPropertyId, group.receipt_date);
+    } catch {
+      setReceiptError('Download ricevuta non riuscito.');
+    } finally {
+      setDownloadingReceipt(false);
+    }
+  }
 
   return (
     <details className={`card history-group ${groupClass} portal-collapse`} style={{ marginTop: '0.75rem', marginBottom: 0 }}>
@@ -95,9 +132,17 @@ export function HistoryGroupCard({ group }: Props) {
             );
           })}
         </div>
-        {group.receipt_download_url && (
+        {canDownloadReceipt && (
           <div style={{ marginTop: '0.75rem' }}>
-            <a href={group.receipt_download_url} target="_blank" rel="noreferrer">Scarica ricevuta AW</a>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => void handleReceiptDownload()}
+              disabled={downloadingReceipt}
+            >
+              {downloadingReceipt ? 'Download…' : 'Scarica ricevuta AW'}
+            </button>
+            {receiptError && <p className="muted" style={{ marginTop: '0.35rem' }}>{receiptError}</p>}
           </div>
         )}
       </div>

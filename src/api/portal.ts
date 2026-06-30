@@ -50,6 +50,20 @@ export async function downloadReceipt(propertyId: number, date: string): Promise
   return data;
 }
 
+export function saveReceiptBlob(blob: Blob, date: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ricevuta-aw-${date}.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadReceiptFile(propertyId: number, date: string): Promise<void> {
+  const blob = await downloadReceipt(propertyId, date);
+  saveReceiptBlob(blob, date);
+}
+
 export function hasPermission(user: PortalUser | null, permission: string): boolean {
   return !!user?.permissions?.includes(permission);
 }
